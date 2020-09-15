@@ -77,6 +77,11 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.merakianalytics.orianna</groupId>
+            <artifactId>orianna</artifactId>
+            <version>4.0.0-rc7</version>
+        </dependency>
     </dependencies>
 
     <build>

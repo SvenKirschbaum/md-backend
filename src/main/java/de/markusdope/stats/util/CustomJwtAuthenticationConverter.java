@@ -1,6 +1,7 @@
 package de.markusdope.stats.util;
 
-import org.springframework.beans.factory.annotation.Value;
+import de.markusdope.stats.config.MarkusDopeStatsProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,8 +21,9 @@ import java.util.stream.Stream;
 public class CustomJwtAuthenticationConverter implements Converter<Jwt, Mono<? extends AbstractAuthenticationToken>> {
 
     private final JwtGrantedAuthoritiesConverter defaultGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-    @Value("${markusdope.resourceId}")
-    private String resourceId;
+
+    @Autowired
+    private MarkusDopeStatsProperties properties;
 
     @Override
     public Mono<? extends AbstractAuthenticationToken> convert(Jwt source) {
@@ -39,7 +41,7 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Mono<? e
         Map<String, Object> resourceAccess = source.getClaim("resource_access");
 
         if (resourceAccess != null) {
-            Map<String, Object> resource = (Map<String, Object>) resourceAccess.get(this.resourceId);
+            Map<String, Object> resource = (Map<String, Object>) resourceAccess.get(properties.getOauthResourceId());
             if (resource != null) {
                 Collection<String> resourceRoles = (Collection<String>) resource.get("roles");
                 if (resourceRoles != null) {

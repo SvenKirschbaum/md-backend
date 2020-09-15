@@ -1,10 +1,12 @@
 package de.markusdope.stats.config;
 
 import de.markusdope.stats.util.CustomJwtAuthenticationConverter;
+import de.markusdope.stats.util.JodaDurationConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -13,8 +15,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -49,5 +53,15 @@ public class MarkusDopeStatsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Autowired
+    private JodaDurationConverter jodaDurationConverter;
+
+    @Bean
+    public MongoCustomConversions mongoCustomConversions() {
+        List list = new ArrayList<>();
+        list.add(jodaDurationConverter);
+        return new MongoCustomConversions(list);
     }
 }
