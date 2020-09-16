@@ -1,5 +1,8 @@
 package de.markusdope.stats.data.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.merakianalytics.orianna.types.data.match.Match;
 import com.merakianalytics.orianna.types.data.match.Participant;
 import de.markusdope.stats.data.document.MatchPlayer;
@@ -79,6 +82,7 @@ public class LolRecords {
     @AllArgsConstructor
     @Data
     public static class LolRecord<T extends Comparable<T>> implements Comparable<LolRecord<T>> {
+        @JsonIgnore
         private T value;
         private String player;
         private String lane;
@@ -88,6 +92,12 @@ public class LolRecords {
         @Override
         public int compareTo(LolRecord<T> o) {
             return this.value.compareTo(o.getValue());
+        }
+
+        @JsonInclude
+        @JsonProperty("value")
+        public String getValueString() {
+            return value.toString();
         }
     }
 
