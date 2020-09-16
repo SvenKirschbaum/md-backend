@@ -16,7 +16,7 @@ public class LolRecords {
 
     public static LolRecords ofMatch(Match match, MatchPlayer matchPlayer) {
         LolRecords lolRecords = new LolRecords();
-        Map<String, Set<LolRecord>> records = new HashMap<>();
+        Map<String, Set<LolRecord>> records = new LinkedHashMap<>();
 
         Function<Function<Participant, Comparable>, Set<LolRecord>> createParticipantRecord = participantComparableFunction -> {
             return match.getParticipants()
@@ -35,10 +35,10 @@ public class LolRecords {
                     .orElseGet(Collections::emptySet);
         };
 
-        records.put("kda", createParticipantRecord.apply(participant -> new KDA(participant.getStats().getKills(), participant.getStats().getDeaths(), participant.getStats().getAssists())));
         records.put("kills", createParticipantRecord.apply(participant -> participant.getStats().getKills()));
         records.put("deaths", createParticipantRecord.apply(participant -> participant.getStats().getDeaths()));
         records.put("assists", createParticipantRecord.apply(participant -> participant.getStats().getAssists()));
+        records.put("kda", createParticipantRecord.apply(participant -> new KDA(participant.getStats().getKills(), participant.getStats().getDeaths(), participant.getStats().getAssists())));
         records.put("gold", createParticipantRecord.apply(participant -> participant.getStats().getGoldEarned()));
         records.put("cs", createParticipantRecord.apply(participant -> participant.getStats().getCreepScore()));
 
@@ -48,7 +48,7 @@ public class LolRecords {
 
     public static LolRecords combine(LolRecords e1, LolRecords e2) {
         LolRecords lolRecords = new LolRecords();
-        Map<String, Set<LolRecord>> records = new HashMap<>();
+        Map<String, Set<LolRecord>> records = new LinkedHashMap<>();
 
         e1.getRecords().forEach(
                 (key, lolRecord) -> {
