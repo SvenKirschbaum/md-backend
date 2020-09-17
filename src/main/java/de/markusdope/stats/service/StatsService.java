@@ -12,6 +12,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,7 +62,12 @@ public class StatsService {
                 .parallel()
                 .runOn(Schedulers.parallel())
                 .map(matchTuple -> LolRecords.ofMatch(matchTuple.getT1(), matchTuple.getT2()))
-                .reduce(LolRecords::combine);
+                .reduce(LolRecords::combine)
+                .switchIfEmpty(Mono.defer(() -> {
+                    LolRecords lolRecords = new LolRecords();
+                    lolRecords.setRecords(Collections.emptyMap());
+                    return Mono.just(lolRecords);
+                }));
     }
 
 }
