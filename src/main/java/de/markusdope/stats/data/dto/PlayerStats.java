@@ -24,6 +24,8 @@ public class PlayerStats {
     private long gold;
     private long cs;
 
+    private int visionScore;
+
     public PlayerStats() {
 
     }
@@ -45,6 +47,8 @@ public class PlayerStats {
         this.setDamage(participant.getStats().getDamageDealt());
         this.setGold(participant.getStats().getGoldEarned());
         this.setCs(participant.getStats().getCreepScore());
+
+        this.setVisionScore(participant.getStats().getVisionScore());
     }
 
     public static PlayerStats combine(PlayerStats p1, PlayerStats p2) {
@@ -62,6 +66,8 @@ public class PlayerStats {
         stats.setDamage(p1.getDamage() + p2.getDamage());
         stats.setGold(p1.getGold() + p2.getGold());
         stats.setCs(p1.getCs() + p2.getCs());
+
+        stats.setVisionScore(p1.getVisionScore() + p2.getVisionScore());
 
         return stats;
     }

@@ -46,6 +46,7 @@ public class LolRecords {
         records.put("kda", createParticipantRecord.apply(participant -> new KDA(participant.getStats().getKills(), participant.getStats().getDeaths(), participant.getStats().getAssists())));
         records.put("gold", createParticipantRecord.apply(participant -> participant.getStats().getGoldEarned()));
         records.put("cs", createParticipantRecord.apply(participant -> participant.getStats().getCreepScore()));
+        records.put("visionScore", createParticipantRecord.apply(participant -> participant.getStats().getVisionScore()));
 
         lolRecords.setRecords(records);
         return lolRecords;
