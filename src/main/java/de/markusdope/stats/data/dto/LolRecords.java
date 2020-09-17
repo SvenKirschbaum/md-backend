@@ -114,12 +114,18 @@ public class LolRecords {
             this.kills = kills;
             this.deaths = deaths;
             this.assists = assists;
-            this.kda = (kills + assists) / (double) (deaths == 0 ? 1 : deaths);
+            this.kda = (kills + assists) / (double) deaths;
         }
 
         @Override
         public int compareTo(KDA o) {
-            return this.kda.compareTo(o.getKda());
+            int c = this.kda.compareTo(o.getKda());
+
+            if (c == 0 && Double.POSITIVE_INFINITY == this.kda) {
+                return Integer.compare(this.getKills() + this.getAssists(), o.getKills() + o.getAssists());
+            }
+
+            return c;
         }
 
         @Override
