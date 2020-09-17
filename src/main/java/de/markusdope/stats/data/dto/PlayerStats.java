@@ -14,7 +14,7 @@ public class PlayerStats {
     private long gameDuration;
 
     private int wins;
-    private int loses;
+    private int losses;
 
     private int kills;
     private int deaths;
@@ -36,7 +36,7 @@ public class PlayerStats {
         this.setGameDuration(match.getDuration().getStandardSeconds());
 
         this.setWins(team.isWinner() ? 1 : 0);
-        this.setLoses(team.isWinner() ? 0 : 1);
+        this.setLosses(team.isWinner() ? 0 : 1);
 
         this.setKills(participant.getStats().getKills());
         this.setDeaths(participant.getStats().getDeaths());
@@ -53,7 +53,7 @@ public class PlayerStats {
         stats.setGameDuration(p1.getGameDuration() + p2.getGameDuration());
 
         stats.setWins(p1.getWins() + p2.getWins());
-        stats.setLoses(p1.getLoses() + p2.getLoses());
+        stats.setLosses(p1.getLosses() + p2.getLosses());
 
         stats.setKills(p1.getKills() + p2.getKills());
         stats.setDeaths(p1.getDeaths() + p2.getDeaths());
