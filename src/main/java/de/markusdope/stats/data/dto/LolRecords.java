@@ -114,7 +114,7 @@ public class LolRecords {
             this.kills = kills;
             this.deaths = deaths;
             this.assists = assists;
-            this.kda = (kills + assists) / (double) deaths;
+            this.kda = (kills + assists) / (double) (deaths == 0 ? 1 : deaths);
         }
 
         @Override
