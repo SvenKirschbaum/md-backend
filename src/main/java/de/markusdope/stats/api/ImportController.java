@@ -22,6 +22,8 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -57,7 +59,11 @@ public class ImportController {
                                     matchPlayerRepository
                                             .findById(matchId)
                                             .map(matchPlayer -> {
-                                                importResponseDTO.setPlayerMapping(matchPlayer.getPlayers());
+                                                HashMap<Integer, String> playerMap = new HashMap<>();
+                                                for (MatchPlayer.Player p : matchPlayer.getPlayers()) {
+                                                    playerMap.put(p.getParticipantId(), p.getName());
+                                                }
+                                                importResponseDTO.setPlayerMapping(playerMap);
                                                 return importResponseDTO;
                                             })
                                             .defaultIfEmpty(importResponseDTO)
@@ -95,8 +101,14 @@ public class ImportController {
                             .collectMap(Tuple2::getT1, Tuple2::getT2)
                             .map(playerMap -> {
                                 MatchPlayer matchPlayer = new MatchPlayer();
+                                MatchPlayer.Player[] players = new MatchPlayer.Player[playerMap.size()];
+                                int i = 0;
+                                for (Map.Entry<Integer, String> entry : playerMap.entrySet()) {
+                                    players[i] = new MatchPlayer.Player(entry.getKey(), entry.getValue());
+                                    i++;
+                                }
                                 matchPlayer.setId(matchId);
-                                matchPlayer.setPlayers(playerMap);
+                                matchPlayer.setPlayers(players);
                                 return matchPlayer;
                             })
                             .flatMap(matchPlayerRepository::save)

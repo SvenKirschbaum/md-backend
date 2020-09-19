@@ -32,7 +32,7 @@ public class StatsService {
                                 matchPlayer ->
                                         matchRepository
                                                 .findById(matchPlayer.getId())
-                                                .flatMapIterable(match -> match.getParticipants().stream().map(participant -> Tuples.of(matchPlayer.getPlayers().get(participant.getParticipantId()), participant, participant.getTeam() == match.getBlueTeam().getTeamId() ? match.getBlueTeam() : match.getRedTeam(), match)).collect(Collectors.toSet()))
+                                                .flatMapIterable(match -> match.getParticipants().stream().map(participant -> Tuples.of(matchPlayer.getParticipant(participant.getParticipantId()), participant, participant.getTeam() == match.getBlueTeam().getTeamId() ? match.getBlueTeam() : match.getRedTeam(), match)).collect(Collectors.toSet()))
                         )
                         .groupBy(Tuple4::getT1, tuple4 -> Tuples.of(tuple4.getT2(), tuple4.getT3(), tuple4.getT4()))
                         .parallel()

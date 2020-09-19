@@ -1,5 +1,6 @@
 package de.markusdope.stats.config;
 
+import com.github.cloudyrock.spring.v5.EnableMongock;
 import de.markusdope.stats.util.CustomJwtAuthenticationConverter;
 import de.markusdope.stats.util.JodaDurationConverter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import java.util.List;
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
+@EnableMongock
 public class MarkusDopeStatsConfig {
 
     @Autowired

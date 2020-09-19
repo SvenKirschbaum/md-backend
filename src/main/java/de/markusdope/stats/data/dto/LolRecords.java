@@ -28,7 +28,7 @@ public class LolRecords {
                     .map(participant ->
                             new LolRecord(
                                     participantComparableFunction.apply(participant),
-                                    matchPlayer.getPlayers().get(participant.getParticipantId()),
+                                    matchPlayer.getParticipant(participant.getParticipantId()),
                                     participant.getLane(),
                                     participant.getChampionId(),
                                     Orianna.championWithId(participant.getChampionId()).get().getName(),
