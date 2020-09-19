@@ -1,7 +1,7 @@
 package de.markusdope.stats.data.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.merakianalytics.orianna.types.core.match.Participant;
+import com.merakianalytics.orianna.types.data.match.Match;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -14,8 +14,7 @@ import java.util.Set;
 public class ImportResponseDTO {
     private final String message;
     private final Long matchId;
-    private Participant[] blueTeam;
-    private Participant[] redTeam;
+    private Match match;
     private Map<Integer, String> playerMapping;
     private Set<String> knownPlayers;
 }

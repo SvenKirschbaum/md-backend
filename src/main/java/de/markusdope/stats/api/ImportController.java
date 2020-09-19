@@ -2,7 +2,6 @@ package de.markusdope.stats.api;
 
 import com.merakianalytics.orianna.Orianna;
 import com.merakianalytics.orianna.types.common.GameType;
-import com.merakianalytics.orianna.types.core.match.Participant;
 import com.merakianalytics.orianna.types.data.match.Match;
 import de.markusdope.stats.data.document.MatchPlayer;
 import de.markusdope.stats.data.dto.ImportRequestDTO;
@@ -51,22 +50,28 @@ public class ImportController {
                     return Mono.just(match)
                             .map(match1 -> {
                                 ImportResponseDTO importResponseDTO = new ImportResponseDTO("The match has been sucessfully loaded", matchId);
-                                importResponseDTO.setBlueTeam(match1.getBlueTeam().getParticipants().toArray(Participant[]::new));
-                                importResponseDTO.setRedTeam(match1.getRedTeam().getParticipants().toArray(Participant[]::new));
+                                importResponseDTO.setMatch(match1.getCoreData());
                                 return importResponseDTO;
                             })
-                            .flatMap(importResponseDTO -> {
-                                return matchPlayerRepository.findById(matchId).map(matchPlayer -> {
-                                    importResponseDTO.setPlayerMapping(matchPlayer.getPlayers());
-                                    return importResponseDTO;
-                                }).defaultIfEmpty(importResponseDTO);
-                            })
-                            .flatMap(importResponseDTO -> {
-                                return playerService.getKnownPlayers().collect(Collectors.toSet()).map(strings -> {
-                                    importResponseDTO.setKnownPlayers(strings);
-                                    return importResponseDTO;
-                                }).defaultIfEmpty(importResponseDTO);
-                            })
+                            .flatMap(importResponseDTO ->
+                                    matchPlayerRepository
+                                            .findById(matchId)
+                                            .map(matchPlayer -> {
+                                                importResponseDTO.setPlayerMapping(matchPlayer.getPlayers());
+                                                return importResponseDTO;
+                                            })
+                                            .defaultIfEmpty(importResponseDTO)
+                            )
+                            .flatMap(importResponseDTO ->
+                                    playerService
+                                            .getKnownPlayers()
+                                            .collect(Collectors.toSet())
+                                            .map(strings -> {
+                                                importResponseDTO.setKnownPlayers(strings);
+                                                return importResponseDTO;
+                                            })
+                                            .defaultIfEmpty(importResponseDTO)
+                            )
                             .map(importResponseDTO ->
                                     ResponseEntity.status(HttpStatus.OK).body(importResponseDTO)
                             );

@@ -55,12 +55,13 @@ public class MarkusDopeStatsConfig {
         return source;
     }
 
+
     @Autowired
     private JodaDurationConverter jodaDurationConverter;
 
     @Bean
     public MongoCustomConversions mongoCustomConversions() {
-        List list = new ArrayList<>();
+        List<JodaDurationConverter> list = new ArrayList<>();
         list.add(jodaDurationConverter);
         return new MongoCustomConversions(list);
     }
