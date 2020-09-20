@@ -1,5 +1,6 @@
 package de.markusdope.stats.service;
 
+import de.markusdope.stats.data.document.MatchDocument;
 import de.markusdope.stats.data.dto.LolRecords;
 import de.markusdope.stats.data.dto.PlayerStats;
 import de.markusdope.stats.data.repository.MatchPlayerRepository;
@@ -32,6 +33,7 @@ public class StatsService {
                                 matchPlayer ->
                                         matchRepository
                                                 .findById(matchPlayer.getId())
+                                                .map(MatchDocument::getMatch)
                                                 .flatMapIterable(match -> match.getParticipants().stream().map(participant -> Tuples.of(matchPlayer.getParticipant(participant.getParticipantId()), participant, participant.getTeam() == match.getBlueTeam().getTeamId() ? match.getBlueTeam() : match.getRedTeam(), match)).collect(Collectors.toSet()))
                         )
                         .groupBy(Tuple4::getT1, tuple4 -> Tuples.of(tuple4.getT2(), tuple4.getT3(), tuple4.getT4()))
@@ -57,7 +59,7 @@ public class StatsService {
                         matchPlayer ->
                                 matchRepository
                                         .findById(matchPlayer.getId())
-                                        .map(match -> Tuples.of(match, matchPlayer))
+                                        .map(match -> Tuples.of(match.getMatch(), matchPlayer))
                 )
                 .parallel()
                 .runOn(Schedulers.parallel())

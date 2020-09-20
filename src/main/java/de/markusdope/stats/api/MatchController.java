@@ -1,6 +1,7 @@
 package de.markusdope.stats.api;
 
 import com.merakianalytics.orianna.Orianna;
+import com.merakianalytics.orianna.types.data.match.Match;
 import com.merakianalytics.orianna.types.data.match.Participant;
 import de.markusdope.stats.data.document.MatchPlayer;
 import de.markusdope.stats.data.dto.MatchDTO;
@@ -38,7 +39,7 @@ public class MatchController {
                     }
                     return playerMap;
                 })
-                .flatMap(playerMap -> matchRepository.findById(id).map(match -> new MatchDTO(match, playerMap)))
+                .flatMap(playerMap -> matchRepository.findById(id).map(match -> new MatchDTO(match.getMatch(), playerMap)))
                 .switchIfEmpty(Mono.error(new NotFoundException()));
     }
 
@@ -58,7 +59,8 @@ public class MatchController {
                 .flatMap(matchPlayer ->
                         matchRepository
                                 .findById(matchPlayer.getId())
-                                .map(match -> {
+                                .map(matchDocument -> {
+                                    Match match = matchDocument.getMatch();
                                     Integer participantId = matchPlayer.getParticipant(name);
 
                                     PlayerMatchDTO playerMatchDTO = new PlayerMatchDTO();

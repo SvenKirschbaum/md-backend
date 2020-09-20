@@ -2,7 +2,10 @@ package de.markusdope.stats.api;
 
 import com.merakianalytics.orianna.Orianna;
 import com.merakianalytics.orianna.types.common.GameType;
-import com.merakianalytics.orianna.types.data.match.Match;
+import com.merakianalytics.orianna.types.core.OriannaObject;
+import com.merakianalytics.orianna.types.data.match.Frame;
+import com.merakianalytics.orianna.types.data.match.Participant;
+import de.markusdope.stats.data.document.MatchDocument;
 import de.markusdope.stats.data.document.MatchPlayer;
 import de.markusdope.stats.data.dto.ImportRequestDTO;
 import de.markusdope.stats.data.dto.ImportResponseDTO;
@@ -94,9 +97,16 @@ public class ImportController {
                     if (!match2.getType().equals(GameType.CUSTOM_GAME))
                         return Mono.error(new UnprocessableEntityException());
                     return Mono.just(match2)
-                            .flatMap(match -> matchRepository.save(match.getCoreData()))
-                            .flatMapIterable(Match::getParticipants)
-                            .map(com.merakianalytics.orianna.types.data.match.Participant::getParticipantId)
+                            .map(match -> {
+                                MatchDocument matchDocument = new MatchDocument();
+                                matchDocument.setId(match.getId());
+                                matchDocument.setMatch(match.getCoreData());
+                                matchDocument.setTimeline(match.getTimeline().stream().map(OriannaObject::getCoreData).toArray(Frame[]::new));
+                                return matchDocument;
+                            })
+                            .flatMap(matchDocument -> matchRepository.save(matchDocument))
+                            .flatMapIterable(matchDocument -> matchDocument.getMatch().getParticipants())
+                            .map(Participant::getParticipantId)
                             .map(participantId -> Tuples.of(participantId, Objects.requireNonNull(importRequestDTO.getPlayerMapping().get(participantId))))
                             .collectMap(Tuple2::getT1, Tuple2::getT2)
                             .map(playerMap -> {
