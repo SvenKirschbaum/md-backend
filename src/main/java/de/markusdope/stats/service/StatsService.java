@@ -59,11 +59,11 @@ public class StatsService {
                         matchPlayer ->
                                 matchRepository
                                         .findById(matchPlayer.getId())
-                                        .map(match -> Tuples.of(match.getMatch(), matchPlayer))
+                                        .map(match -> Tuples.of(match, matchPlayer))
                 )
                 .parallel()
                 .runOn(Schedulers.parallel())
-                .map(matchTuple -> LolRecords.ofMatch(matchTuple.getT1(), matchTuple.getT2()))
+                .map(matchTuple -> LolRecords.ofMatchDocument(matchTuple.getT1(), matchTuple.getT2()))
                 .reduce(LolRecords::combine)
                 .switchIfEmpty(Mono.defer(() -> {
                     LolRecords lolRecords = new LolRecords();

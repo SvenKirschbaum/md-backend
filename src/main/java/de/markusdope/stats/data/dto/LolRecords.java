@@ -4,13 +4,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.merakianalytics.orianna.Orianna;
+import com.merakianalytics.orianna.types.data.match.Event;
 import com.merakianalytics.orianna.types.data.match.Match;
 import com.merakianalytics.orianna.types.data.match.Participant;
+import de.markusdope.stats.data.document.MatchDocument;
 import de.markusdope.stats.data.document.MatchPlayer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.time.Duration;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @Data
@@ -18,11 +22,12 @@ public class LolRecords {
 
     private Map<String, Set<LolRecord>> records;
 
-    public static LolRecords ofMatch(Match match, MatchPlayer matchPlayer) {
+    public static LolRecords ofMatchDocument(MatchDocument matchDocument, MatchPlayer matchPlayer) {
+        Match match = matchDocument.getMatch();
         LolRecords lolRecords = new LolRecords();
         Map<String, Set<LolRecord>> records = new LinkedHashMap<>();
 
-        Function<Function<Participant, Comparable>, Set<LolRecord>> createParticipantRecord = participantComparableFunction -> {
+        BiFunction<Function<Participant, Comparable>, Boolean, Set<LolRecord>> createParticipantRecord = (participantComparableFunction, inverse) -> {
             return match.getParticipants()
                     .stream()
                     .map(participant ->
@@ -32,7 +37,8 @@ public class LolRecords {
                                     participant.getLane(),
                                     participant.getChampionId(),
                                     Orianna.championWithId(participant.getChampionId()).get().getName(),
-                                    match.getId()
+                                    match.getId(),
+                                    inverse
                             )
                     )
                     .map(Set::of)
@@ -40,13 +46,34 @@ public class LolRecords {
                     .orElseGet(Collections::emptySet);
         };
 
-        records.put("kills", createParticipantRecord.apply(participant -> participant.getStats().getKills()));
-        records.put("deaths", createParticipantRecord.apply(participant -> participant.getStats().getDeaths()));
-        records.put("assists", createParticipantRecord.apply(participant -> participant.getStats().getAssists()));
-        records.put("kda", createParticipantRecord.apply(participant -> new KDA(participant.getStats().getKills(), participant.getStats().getDeaths(), participant.getStats().getAssists())));
-        records.put("gold", createParticipantRecord.apply(participant -> participant.getStats().getGoldEarned()));
-        records.put("cs", createParticipantRecord.apply(participant -> participant.getStats().getCreepScore()));
-        records.put("visionScore", createParticipantRecord.apply(participant -> participant.getStats().getVisionScore()));
+        records.put("kills", createParticipantRecord.apply(participant -> participant.getStats().getKills(), false));
+        records.put("deaths", createParticipantRecord.apply(participant -> participant.getStats().getDeaths(), false));
+        records.put("assists", createParticipantRecord.apply(participant -> participant.getStats().getAssists(), false));
+        records.put("kda", createParticipantRecord.apply(participant -> new KDA(participant.getStats().getKills(), participant.getStats().getDeaths(), participant.getStats().getAssists()), false));
+        records.put("gold", createParticipantRecord.apply(participant -> participant.getStats().getGoldEarned(), false));
+        records.put("cs", createParticipantRecord.apply(participant -> participant.getStats().getCreepScore(), false));
+        records.put("visionScore", createParticipantRecord.apply(participant -> participant.getStats().getVisionScore(), false));
+
+        Optional<Event> first_champion_kill_opt = Arrays.stream(matchDocument.getTimeline()).flatMap(Collection::stream).filter(event -> event.getType().equals("CHAMPION_KILL")).min(Comparator.comparing(Event::getTimestamp));
+
+        if (first_champion_kill_opt.isPresent()) {
+            Event first_champion_kill = first_champion_kill_opt.get();
+            Participant participant = getParticipant(match, first_champion_kill.getVictimId());
+
+            records.put("earlyKill",
+                    Collections.singleton(
+                            new LolRecord<TimeRecord>(
+                                    new TimeRecord(Duration.ofMillis(first_champion_kill.getTimestamp().getMillis())),
+                                    matchPlayer.getParticipant(first_champion_kill.getVictimId()),
+                                    participant.getLane(),
+                                    participant.getChampionId(),
+                                    Orianna.championWithId(participant.getChampionId()).get().getName(),
+                                    match.getId(),
+                                    true
+                            )
+                    )
+            );
+        }
 
         lolRecords.setRecords(records);
         return lolRecords;
@@ -59,11 +86,22 @@ public class LolRecords {
         e1.getRecords().forEach(
                 (key, lolRecord) -> {
                     records.put(key, LolRecords.getMaxSet(lolRecord, e2.getRecords().get(key)));
+                    e2.getRecords().remove(key);
+                }
+        );
+        //In case e2 contains record entries which e1 doesnt contain
+        e2.getRecords().forEach(
+                (key, lolRecord) -> {
+                    records.put(key, LolRecords.getMaxSet(lolRecord, e1.getRecords().get(key)));
                 }
         );
 
         lolRecords.setRecords(records);
         return lolRecords;
+    }
+
+    private static Participant getParticipant(Match match, int participantId) {
+        return match.getParticipants().stream().filter(participant -> participant.getParticipantId() == participantId).findFirst().get();
     }
 
     private static Set<LolRecord> getMaxSet(Set<LolRecord> e1, Set<LolRecord> e2) {
@@ -92,10 +130,11 @@ public class LolRecords {
         private int championId;
         private String champion;
         private long matchId;
+        private boolean inverseSort = false;
 
         @Override
         public int compareTo(LolRecord<T> o) {
-            return this.value.compareTo(o.getValue());
+            return inverseSort ? -this.value.compareTo(o.getValue()) : this.value.compareTo(o.getValue());
         }
 
         @JsonInclude
@@ -132,6 +171,24 @@ public class LolRecords {
         @Override
         public String toString() {
             return String.format("%d/%d/%d", this.kills, this.deaths, this.assists);
+        }
+    }
+
+    @Data
+    public static class TimeRecord implements Comparable<TimeRecord> {
+        final private Duration duration;
+
+        @Override
+        public int compareTo(TimeRecord o) {
+            return duration.compareTo(o.getDuration());
+        }
+
+        @Override
+        public String toString() {
+            if (this.duration.toMinutes() > 0) {
+                return String.format("%d Minuten %d Sekunden", this.duration.toMinutes(), this.duration.toSecondsPart());
+            }
+            return String.format("%d Sekunden", this.duration.toSecondsPart());
         }
     }
 }
