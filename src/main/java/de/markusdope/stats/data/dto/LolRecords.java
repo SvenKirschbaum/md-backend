@@ -58,16 +58,32 @@ public class LolRecords {
 
         if (first_champion_kill_opt.isPresent()) {
             Event first_champion_kill = first_champion_kill_opt.get();
-            Participant participant = getParticipant(match, first_champion_kill.getVictimId());
+            Participant victim = getParticipant(match, first_champion_kill.getVictimId());
+            Participant killer = getParticipant(match, first_champion_kill.getKillerId());
+
 
             records.put("earlyKill",
                     Collections.singleton(
                             new LolRecord<TimeRecord>(
                                     new TimeRecord(Duration.ofMillis(first_champion_kill.getTimestamp().getMillis())),
-                                    matchPlayer.getParticipant(first_champion_kill.getVictimId()),
-                                    participant.getLane(),
-                                    participant.getChampionId(),
-                                    Orianna.championWithId(participant.getChampionId()).get().getName(),
+                                    matchPlayer.getParticipant(killer.getParticipantId()),
+                                    killer.getLane(),
+                                    killer.getChampionId(),
+                                    Orianna.championWithId(killer.getChampionId()).get().getName(),
+                                    match.getId(),
+                                    true
+                            )
+                    )
+            );
+
+            records.put("earlyDeath",
+                    Collections.singleton(
+                            new LolRecord<TimeRecord>(
+                                    new TimeRecord(Duration.ofMillis(first_champion_kill.getTimestamp().getMillis())),
+                                    matchPlayer.getParticipant(victim.getParticipantId()),
+                                    victim.getLane(),
+                                    victim.getChampionId(),
+                                    Orianna.championWithId(victim.getChampionId()).get().getName(),
                                     match.getId(),
                                     true
                             )
