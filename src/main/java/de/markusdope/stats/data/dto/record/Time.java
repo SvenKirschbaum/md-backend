@@ -5,11 +5,11 @@ import lombok.Data;
 import java.time.Duration;
 
 @Data
-public class TimeRecord implements Comparable<TimeRecord> {
+public class Time implements Comparable<Time> {
     final private Duration duration;
 
     @Override
-    public int compareTo(TimeRecord o) {
+    public int compareTo(Time o) {
         return duration.compareTo(o.getDuration());
     }
 

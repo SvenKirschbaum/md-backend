@@ -7,7 +7,8 @@ import com.merakianalytics.orianna.types.data.match.Participant;
 import de.markusdope.stats.data.document.MatchDocument;
 import de.markusdope.stats.data.document.MatchPlayer;
 import de.markusdope.stats.data.dto.record.KDA;
-import de.markusdope.stats.data.dto.record.TimeRecord;
+import de.markusdope.stats.data.dto.record.Percent;
+import de.markusdope.stats.data.dto.record.Time;
 import de.markusdope.stats.data.dto.recordTypes.PlayerRecord;
 import lombok.Data;
 
@@ -25,13 +26,27 @@ public class LolRecordsDTO {
         LolRecordsDTO lolRecordsDTO = new LolRecordsDTO();
         Map<String, Set<LolRecord>> records = new LinkedHashMap<>();
 
-        records.put("kills", LolRecordsDTO.createParticipantRecord(participant -> participant.getStats().getKills(), match, matchPlayer, false));
-        records.put("deaths", LolRecordsDTO.createParticipantRecord(participant -> participant.getStats().getDeaths(), match, matchPlayer, false));
-        records.put("assists", LolRecordsDTO.createParticipantRecord(participant -> participant.getStats().getAssists(), match, matchPlayer, false));
-        records.put("kda", LolRecordsDTO.createParticipantRecord(participant -> new KDA(participant.getStats().getKills(), participant.getStats().getDeaths(), participant.getStats().getAssists()), match, matchPlayer, false));
-        records.put("gold", LolRecordsDTO.createParticipantRecord(participant -> participant.getStats().getGoldEarned(), match, matchPlayer, false));
-        records.put("cs", LolRecordsDTO.createParticipantRecord(participant -> participant.getStats().getCreepScore(), match, matchPlayer, false));
-        records.put("visionScore", LolRecordsDTO.createParticipantRecord(participant -> participant.getStats().getVisionScore(), match, matchPlayer, false));
+        records.put("kills", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getKills(), match, matchPlayer, false));
+        records.put("deaths", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getDeaths(), match, matchPlayer, false));
+        records.put("assists", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getAssists(), match, matchPlayer, false));
+        records.put("kda", LolRecordsDTO.createPlayerRecord(participant -> new KDA(participant.getStats().getKills(), participant.getStats().getDeaths(), participant.getStats().getAssists()), match, matchPlayer, false));
+        records.put("gold", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getGoldEarned(), match, matchPlayer, false));
+        records.put("cs", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getCreepScore(), match, matchPlayer, false));
+        records.put("visionScore", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getVisionScore(), match, matchPlayer, false));
+        records.put("highestkillParticipation", LolRecordsDTO.createPlayerRecord(player -> {
+            double killparticipations = player.getStats().getKills() + player.getStats().getAssists();
+            double teamkills = match.getParticipants().stream().filter(participant -> participant.getTeam() == player.getTeam()).map(participant -> participant.getStats().getKills()).reduce(Integer::sum).orElse(0);
+            return new Percent(killparticipations / teamkills);
+        }, match, matchPlayer, false));
+        records.put("lowestkillParticipation", LolRecordsDTO.createPlayerRecord(player -> {
+            double killparticipations = player.getStats().getKills() + player.getStats().getAssists();
+            double teamkills = match.getParticipants().stream().filter(participant -> participant.getTeam() == player.getTeam()).map(participant -> participant.getStats().getKills()).reduce(Integer::sum).orElse(0);
+            return new Percent(killparticipations / teamkills);
+        }, match, matchPlayer, true));
+        records.put("ccTime", LolRecordsDTO.createPlayerRecord(participant -> new Time(Duration.ofMillis(participant.getStats().getCrowdControlDealtToChampions().getMillis())), match, matchPlayer, false));
+        records.put("killingSpree", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getLargestKillingSpree(), match, matchPlayer, false));
+        records.put("multiKill", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getLargestMultiKill(), match, matchPlayer, false));
+
 
         Optional<Event> first_champion_kill_opt = Arrays.stream(matchDocument.getTimeline()).flatMap(Collection::stream).filter(event -> event.getType().equals("CHAMPION_KILL")).min(Comparator.comparing(Event::getTimestamp));
 
@@ -43,8 +58,8 @@ public class LolRecordsDTO {
 
             records.put("earlyKill",
                     Collections.singleton(
-                            new PlayerRecord<TimeRecord>(
-                                    new TimeRecord(Duration.ofMillis(first_champion_kill.getTimestamp().getMillis())),
+                            new PlayerRecord<Time>(
+                                    new Time(Duration.ofMillis(first_champion_kill.getTimestamp().getMillis())),
                                     matchPlayer.getParticipant(killer.getParticipantId()),
                                     killer.getLane(),
                                     killer.getChampionId(),
@@ -57,8 +72,8 @@ public class LolRecordsDTO {
 
             records.put("earlyDeath",
                     Collections.singleton(
-                            new PlayerRecord<TimeRecord>(
-                                    new TimeRecord(Duration.ofMillis(first_champion_kill.getTimestamp().getMillis())),
+                            new PlayerRecord<Time>(
+                                    new Time(Duration.ofMillis(first_champion_kill.getTimestamp().getMillis())),
                                     matchPlayer.getParticipant(victim.getParticipantId()),
                                     victim.getLane(),
                                     victim.getChampionId(),
@@ -115,7 +130,7 @@ public class LolRecordsDTO {
         }
     }
 
-    private static <T extends Comparable<T>> Set<LolRecord> createParticipantRecord(Function<Participant, T> participantComparableFunction, Match match, MatchPlayer matchPlayer, boolean inverse) {
+    private static <T extends Comparable<T>> Set<LolRecord> createPlayerRecord(Function<Participant, T> participantComparableFunction, Match match, MatchPlayer matchPlayer, boolean inverse) {
         return match.getParticipants()
                 .stream()
                 .map(participant ->
