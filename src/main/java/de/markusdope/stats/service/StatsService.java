@@ -1,7 +1,7 @@
 package de.markusdope.stats.service;
 
 import de.markusdope.stats.data.document.MatchDocument;
-import de.markusdope.stats.data.dto.LolRecords;
+import de.markusdope.stats.data.dto.LolRecordsDTO;
 import de.markusdope.stats.data.dto.PlayerStats;
 import de.markusdope.stats.data.repository.MatchPlayerRepository;
 import de.markusdope.stats.data.repository.MatchRepository;
@@ -52,7 +52,7 @@ public class StatsService {
                         .sequential();
     }
 
-    public Mono<LolRecords> getRecords() {
+    public Mono<LolRecordsDTO> getRecords() {
         return matchPlayerRepository
                 .findAll()
                 .flatMap(
@@ -63,12 +63,12 @@ public class StatsService {
                 )
                 .parallel()
                 .runOn(Schedulers.parallel())
-                .map(matchTuple -> LolRecords.ofMatchDocument(matchTuple.getT1(), matchTuple.getT2()))
-                .reduce(LolRecords::combine)
+                .map(matchTuple -> LolRecordsDTO.ofMatchDocument(matchTuple.getT1(), matchTuple.getT2()))
+                .reduce(LolRecordsDTO::combine)
                 .switchIfEmpty(Mono.defer(() -> {
-                    LolRecords lolRecords = new LolRecords();
-                    lolRecords.setRecords(Collections.emptyMap());
-                    return Mono.just(lolRecords);
+                    LolRecordsDTO lolRecordsDTO = new LolRecordsDTO();
+                    lolRecordsDTO.setRecords(Collections.emptyMap());
+                    return Mono.just(lolRecordsDTO);
                 }));
     }
 

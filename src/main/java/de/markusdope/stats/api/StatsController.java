@@ -1,6 +1,6 @@
 package de.markusdope.stats.api;
 
-import de.markusdope.stats.data.dto.LolRecords;
+import de.markusdope.stats.data.dto.LolRecordsDTO;
 import de.markusdope.stats.data.dto.PlayerStats;
 import de.markusdope.stats.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class StatsController {
     }
 
     @GetMapping("/records")
-    public Mono<LolRecords> getRecords() {
+    public Mono<LolRecordsDTO> getRecords() {
         return statsService.getRecords();
     }
 }
