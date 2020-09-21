@@ -46,7 +46,7 @@ public class PlayerStats {
 
         this.setDamage(participant.getStats().getDamageDealt());
         this.setGold(participant.getStats().getGoldEarned());
-        this.setCs(participant.getStats().getCreepScore());
+        this.setCs(participant.getStats().getCreepScore() + participant.getStats().getNeutralMinionsKilled());
 
         this.setVisionScore(participant.getStats().getVisionScore());
     }
