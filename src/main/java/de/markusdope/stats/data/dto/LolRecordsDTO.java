@@ -43,6 +43,11 @@ public class LolRecordsDTO {
             double teamkills = match.getParticipants().stream().filter(participant -> participant.getTeam() == player.getTeam()).map(participant -> participant.getStats().getKills()).reduce(Integer::sum).orElse(0);
             return new Percent(killparticipations / teamkills);
         }, match, matchPlayer, true));
+        records.put("highestDeathParticipation", LolRecordsDTO.createPlayerRecord(player -> {
+            double deathparticipations = player.getStats().getDeaths();
+            double teamdeaths = match.getParticipants().stream().filter(participant -> participant.getTeam() == player.getTeam()).map(participant -> participant.getStats().getDeaths()).reduce(Integer::sum).orElse(0);
+            return new Percent(deathparticipations / teamdeaths);
+        }, match, matchPlayer, false));
         records.put("ccTime", LolRecordsDTO.createPlayerRecord(participant -> new Time(Duration.ofMillis(participant.getStats().getCrowdControlDealtToChampions().getMillis())), match, matchPlayer, false));
         records.put("killingSpree", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getLargestKillingSpree(), match, matchPlayer, false));
         records.put("multiKill", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getLargestMultiKill(), match, matchPlayer, false));
