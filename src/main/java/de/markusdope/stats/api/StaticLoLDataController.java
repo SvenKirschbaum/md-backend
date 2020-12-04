@@ -1,6 +1,8 @@
 package de.markusdope.stats.api;
 
 import com.merakianalytics.orianna.Orianna;
+import de.markusdope.stats.service.VersionService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,33 +17,37 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/static")
+@RequestMapping("/static/{version}")
 public class StaticLoLDataController {
+
+    @Autowired
+    private VersionService versionService;
+
     @GetMapping(value = "/champion/image/{championid}", produces = MediaType.IMAGE_PNG_VALUE)
-    public Mono<byte[]> getChampion(@PathVariable int championid) {
+    public Mono<byte[]> getChampion(@PathVariable int championid, @PathVariable String version) {
         return this.imageToByteArray(
                 Mono.just(championid)
                         .publishOn(Schedulers.boundedElastic())
-                        .map(id -> Orianna.championWithId(id).get())
+                        .map(id -> Orianna.championWithId(id).withVersion(versionService.fromMatch(version)).get())
                         .map(champion -> champion.getImage().get())
         );
     }
 
     @GetMapping(value = "/summonerSpell/image/{spellId}", produces = MediaType.IMAGE_PNG_VALUE)
-    public Mono<byte[]> getSummonerSpell(@PathVariable int spellId) {
+    public Mono<byte[]> getSummonerSpell(@PathVariable int spellId, @PathVariable String version) {
         return this.imageToByteArray(
                 Mono.just(spellId)
                         .publishOn(Schedulers.boundedElastic())
-                        .map(id -> Orianna.summonerSpellWithId(id).get().getImage().get())
+                        .map(id -> Orianna.summonerSpellWithId(id).withVersion(versionService.fromMatch(version)).get().getImage().get())
         );
     }
 
     @GetMapping(value = "/item/image/{itemId}", produces = MediaType.IMAGE_PNG_VALUE)
-    public Mono<byte[]> getItem(@PathVariable int itemId) {
+    public Mono<byte[]> getItem(@PathVariable int itemId, @PathVariable String version) {
         return this.imageToByteArray(
                 Mono.just(itemId)
                         .publishOn(Schedulers.boundedElastic())
-                        .map(id -> Orianna.itemWithId(id).get().getImage().get())
+                        .map(id -> Orianna.itemWithId(id).withVersion(versionService.fromMatch(version)).get().getImage().get())
         );
     }
 

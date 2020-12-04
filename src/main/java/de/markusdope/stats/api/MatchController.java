@@ -82,6 +82,7 @@ public class MatchController {
                                     playerMatchDTO.setChampion(Orianna.championWithId(p.getChampionId()).get().getName());
                                     playerMatchDTO.setMatchCreationTime(match.getCreationTime().toInstant());
                                     playerMatchDTO.setMatchDuration(match.getDuration());
+                                    playerMatchDTO.setVersion(match.getVersion());
 
 
                                     return playerMatchDTO;

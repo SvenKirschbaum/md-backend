@@ -13,4 +13,5 @@ public class PlayerMatchDTO {
     private Participant player;
     private Instant matchCreationTime;
     private Duration matchDuration;
+    private String version;
 }
