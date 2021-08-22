@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.3.3.RELEASE</version>
+        <version>2.5.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>de.markus-dope</groupId>
@@ -14,16 +14,12 @@
     <name>Markus Dope Stats</name>
     <description>Markus Dope Stats Analytics</description>
 
-    <properties>
-        <java.version>14</java.version>
-    </properties>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>com.github.cloudyrock.mongock</groupId>
                 <artifactId>mongock-bom</artifactId>
-                <version>4.1.17</version>
+                <version>4.3.8</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -92,7 +88,7 @@
         <dependency>
             <groupId>com.merakianalytics.orianna</groupId>
             <artifactId>orianna</artifactId>
-            <version>4.0.0-rc7</version>
+            <version>4.0.0-rc8</version>
         </dependency>
         <dependency>
             <groupId>ical4j</groupId>
@@ -126,5 +122,11 @@
             </plugin>
         </plugins>
     </build>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.target>15</maven.compiler.target>
+        <maven.compiler.source>15</maven.compiler.source>
+    </properties>
 
 </project>
