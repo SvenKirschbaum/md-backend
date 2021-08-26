@@ -5,6 +5,7 @@ import com.merakianalytics.orianna.types.common.GameType;
 import com.merakianalytics.orianna.types.core.OriannaObject;
 import com.merakianalytics.orianna.types.data.match.Frame;
 import com.merakianalytics.orianna.types.data.match.Participant;
+import de.markusdope.stats.config.MarkusDopeStatsProperties;
 import de.markusdope.stats.data.document.MatchDocument;
 import de.markusdope.stats.data.document.MatchPlayer;
 import de.markusdope.stats.data.dto.ImportRequestDTO;
@@ -42,6 +43,8 @@ public class ImportController {
     private MatchPlayerRepository matchPlayerRepository;
     @Autowired
     private PlayerService playerService;
+    @Autowired
+    private MarkusDopeStatsProperties properties;
 
     @GetMapping("/{matchId}")
     public Mono<ResponseEntity<ImportResponseDTO>> getAction(@PathVariable Long matchId) {
@@ -100,6 +103,7 @@ public class ImportController {
                             .map(match -> {
                                 MatchDocument matchDocument = new MatchDocument();
                                 matchDocument.setId(match.getId());
+                                matchDocument.setSeason(properties.getCurrentSeason());
                                 matchDocument.setMatch(match.getCoreData());
                                 matchDocument.setTimeline(match.getTimeline().stream().map(OriannaObject::getCoreData).toArray(Frame[]::new));
                                 return matchDocument;

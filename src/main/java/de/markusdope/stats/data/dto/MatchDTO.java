@@ -11,4 +11,5 @@ import java.util.Map;
 public class MatchDTO {
     private Match match;
     private Map<Integer, String> players;
+    private Integer season;
 }

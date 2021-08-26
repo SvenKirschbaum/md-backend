@@ -3,6 +3,7 @@ package de.markusdope.stats.api;
 import com.merakianalytics.orianna.Orianna;
 import com.merakianalytics.orianna.types.data.match.Match;
 import com.merakianalytics.orianna.types.data.match.Participant;
+import de.markusdope.stats.config.MarkusDopeStatsProperties;
 import de.markusdope.stats.data.document.MatchPlayer;
 import de.markusdope.stats.data.dto.MatchDTO;
 import de.markusdope.stats.data.dto.PlayerMatchDTO;
@@ -17,6 +18,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/match")
@@ -27,11 +30,14 @@ public class MatchController {
     @Autowired
     private MatchPlayerRepository matchPlayerRepository;
 
+    @Autowired
+    private MarkusDopeStatsProperties properties;
+
     @GetMapping("/{id}")
     public Mono<MatchDTO> getMatchAction(@PathVariable Long id) {
         return matchPlayerRepository
                 .findById(id)
-                .map(matchPlayer -> matchPlayer.getPlayers())
+                .map(MatchPlayer::getPlayers)
                 .map(players -> {
                     Map<Integer, String> playerMap = new HashMap<>();
                     for (MatchPlayer.Player p : players) {
@@ -39,7 +45,7 @@ public class MatchController {
                     }
                     return playerMap;
                 })
-                .flatMap(playerMap -> matchRepository.findById(id).map(match -> new MatchDTO(match.getMatch(), playerMap)))
+                .flatMap(playerMap -> matchRepository.findById(id).map(match -> new MatchDTO(match.getMatch(), playerMap, match.getSeason())))
                 .switchIfEmpty(Mono.error(new NotFoundException()));
     }
 
@@ -52,13 +58,19 @@ public class MatchController {
                 .and(matchRepository.deleteById(id));
     }
 
-    @GetMapping("/player/{name}")
-    public Flux<PlayerMatchDTO> getPlayerMatches(@PathVariable String name) {
+    @GetMapping(value = {"/player/{name}", "/player/{name}/{season}"})
+    public Flux<PlayerMatchDTO> getPlayerMatches(@PathVariable String name, @PathVariable Optional<Integer> season) {
         return matchPlayerRepository
                 .findAllByPlayer(name)
                 .flatMap(matchPlayer ->
                         matchRepository
                                 .findById(matchPlayer.getId())
+                                .filter(matchDocument -> {
+                                    Integer searchedSeason = season.orElse(properties.getCurrentSeason());
+
+                                    //Handle season = 0 as all season combined
+                                    return searchedSeason == 0 || matchDocument.getSeason().equals(searchedSeason);
+                                })
                                 .map(matchDocument -> {
                                     Match match = matchDocument.getMatch();
                                     Integer participantId = matchPlayer.getParticipant(name);

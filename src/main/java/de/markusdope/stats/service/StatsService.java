@@ -25,7 +25,7 @@ public class StatsService {
     @Autowired
     private MatchRepository matchRepository;
 
-    public Flux<PlayerStats> getPlayerStats() {
+    public Flux<PlayerStats> getPlayerStats(Integer season) {
         return
                 matchPlayerRepository
                         .findAll()
@@ -33,6 +33,8 @@ public class StatsService {
                                 matchPlayer ->
                                         matchRepository
                                                 .findById(matchPlayer.getId())
+                                                //Handle season == 0 as all season combined
+                                                .filter(matchDocument -> season == 0 || matchDocument.getSeason().equals(season))
                                                 .map(MatchDocument::getMatch)
                                                 .flatMapIterable(match -> match.getParticipants().stream().map(participant -> Tuples.of(matchPlayer.getParticipant(participant.getParticipantId()), participant, participant.getTeam() == match.getBlueTeam().getTeamId() ? match.getBlueTeam() : match.getRedTeam(), match)).collect(Collectors.toSet()))
                         )
@@ -52,13 +54,15 @@ public class StatsService {
                         .sequential();
     }
 
-    public Mono<LolRecordsDTO> getRecords() {
+    public Mono<LolRecordsDTO> getRecords(Integer season) {
         return matchPlayerRepository
                 .findAll()
                 .flatMap(
                         matchPlayer ->
                                 matchRepository
                                         .findById(matchPlayer.getId())
+                                        //Handle season == 0 as all season combined
+                                        .filter(matchDocument -> season == 0 || matchDocument.getSeason().equals(season))
                                         .map(match -> Tuples.of(match, matchPlayer))
                 )
                 .parallel()
