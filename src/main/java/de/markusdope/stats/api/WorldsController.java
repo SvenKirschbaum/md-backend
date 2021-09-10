@@ -27,7 +27,7 @@ public class WorldsController {
                     () ->
                             webClient
                                     .get()
-                                    .uri("https://lol.gamepedia.com/api.php?action=cargoquery&format=json&smaxage=0&tables=MatchSchedule&fields=DateTime_UTC,Team1,Team2&where=OverviewPage LIKE \"2020 Season World Championship/%\"&limit=max")
+                                    .uri("https://lol.gamepedia.com/api.php?action=cargoquery&format=json&smaxage=0&tables=MatchSchedule&fields=DateTime_UTC,Team1,Team2&where=OverviewPage LIKE \"2021 Season World Championship/%\"&limit=max")
                                     .retrieve()
                                     .bodyToMono(WorldsScheduleResponse.class)
             )
