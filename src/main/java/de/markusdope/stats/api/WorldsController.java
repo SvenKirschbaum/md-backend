@@ -21,13 +21,13 @@ import java.util.Arrays;
 @RestController
 public class WorldsController {
 
-    private WebClient webClient = WebClient.create();
+    private final WebClient webClient = WebClient.create();
     private final Mono<String> schedule =
             Mono.defer(
                     () ->
                             webClient
                                     .get()
-                                    .uri("https://lol.gamepedia.com/api.php?action=cargoquery&format=json&smaxage=0&tables=MatchSchedule&fields=DateTime_UTC,Team1,Team2&where=OverviewPage LIKE \"2021 Season World Championship/%\"&limit=max")
+                                    .uri("https://lol.gamepedia.com/api.php?action=cargoquery&format=json&smaxage=0&tables=MatchSchedule&fields=DateTime_UTC,Team1,Team2&where=OverviewPage LIKE \"2022 Season World Championship/%\"&limit=max")
                                     .retrieve()
                                     .bodyToMono(WorldsScheduleResponse.class)
             )
