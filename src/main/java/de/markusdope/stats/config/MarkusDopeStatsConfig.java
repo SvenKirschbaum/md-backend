@@ -2,11 +2,13 @@ package de.markusdope.stats.config;
 
 import com.github.cloudyrock.spring.v5.EnableMongock;
 import de.markusdope.stats.util.CustomJwtAuthenticationConverter;
+import de.markusdope.stats.util.JodaDateTimeConverter;
 import de.markusdope.stats.util.JodaDurationConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -61,10 +63,14 @@ public class MarkusDopeStatsConfig {
     @Autowired
     private JodaDurationConverter jodaDurationConverter;
 
+    @Autowired
+    private JodaDateTimeConverter jodaDateTimeConverter;
+
     @Bean
     public MongoCustomConversions mongoCustomConversions() {
-        List<JodaDurationConverter> list = new ArrayList<>();
+        List<Converter> list = new ArrayList<>();
         list.add(jodaDurationConverter);
+        list.add(jodaDateTimeConverter);
         return new MongoCustomConversions(list);
     }
 }
