@@ -25,12 +25,12 @@ public class StatsController {
     @Autowired
     private MarkusDopeStatsProperties properties;
 
-    @GetMapping(value = {"/player", "/player/{season}"})
+    @GetMapping(value = {"/player/", "/player/{season}"})
     public Flux<PlayerStats> getPlayerStats(@PathVariable Optional<Integer> season) {
         return statsService.getPlayerStats(season.orElse(properties.getCurrentSeason()));
     }
 
-    @GetMapping(value = {"/records", "/records/{season}"})
+    @GetMapping(value = {"/records/", "/records/{season}"})
     public Mono<LolRecordsDTO> getRecords(@PathVariable Optional<Integer> season) {
         return statsService.getRecords(season.orElse(properties.getCurrentSeason()));
     }

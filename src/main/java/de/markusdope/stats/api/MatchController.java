@@ -58,7 +58,7 @@ public class MatchController {
                 .and(matchRepository.deleteById(id));
     }
 
-    @GetMapping(value = {"/player/{name}", "/player/{name}/{season}"})
+    @GetMapping(value = {"/player/{name}/", "/player/{name}/{season}"})
     public Flux<PlayerMatchDTO> getPlayerMatches(@PathVariable String name, @PathVariable Optional<Integer> season) {
         return matchPlayerRepository
                 .findAllByPlayer(name)
