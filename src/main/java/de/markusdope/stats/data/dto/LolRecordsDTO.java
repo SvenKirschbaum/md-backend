@@ -11,6 +11,7 @@ import de.markusdope.stats.data.dto.record.Percent;
 import de.markusdope.stats.data.dto.record.Time;
 import de.markusdope.stats.data.dto.recordTypes.PlayerRecord;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Duration;
 import java.util.*;
@@ -68,7 +69,7 @@ public class LolRecordsDTO {
                                     matchPlayer.getParticipant(killer.getParticipantId()),
                                     killer.getLane(),
                                     killer.getChampionId(),
-                                    Orianna.championWithId(killer.getChampionId()).get().getName(),
+                                    Orianna.championWithId(killer.getChampionId()).withVersion(match.getVersion()).get().getName(),
                                     match.getId(),
                                     true
                             )
@@ -82,7 +83,7 @@ public class LolRecordsDTO {
                                     matchPlayer.getParticipant(victim.getParticipantId()),
                                     victim.getLane(),
                                     victim.getChampionId(),
-                                    Orianna.championWithId(victim.getChampionId()).get().getName(),
+                                    Orianna.championWithId(victim.getChampionId()).withVersion(match.getVersion()).get().getName(),
                                     match.getId(),
                                     true
                             )
@@ -144,7 +145,7 @@ public class LolRecordsDTO {
                                 matchPlayer.getParticipant(participant.getParticipantId()),
                                 participant.getLane(),
                                 participant.getChampionId(),
-                                Orianna.championWithId(participant.getChampionId()).get().getName(),
+                                Orianna.championWithId(participant.getChampionId()).withVersion(match.getVersion()).get().getName(),
                                 match.getId(),
                                 inverse
                         )
