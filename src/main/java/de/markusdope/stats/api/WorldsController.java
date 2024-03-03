@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -56,7 +57,8 @@ public class WorldsController {
 
                         return calendar.toString();
                     })
-                    .cache(Duration.ofHours(1));
+                    .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(1)))
+                    .cache((v) -> Duration.ofHours(1), (v) -> Duration.ZERO, () -> Duration.ZERO);
 
 
     @GetMapping(value = "/worlds/schedule.icu", produces = "text/calendar")
