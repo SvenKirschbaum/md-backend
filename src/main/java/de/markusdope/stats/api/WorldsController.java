@@ -45,6 +45,10 @@ public class WorldsController {
                         ComponentList components = calendar.getComponents();
 
                         for (WorldsScheduleResponse.WorldsScheduleMatch match : worldsScheduleMatches) {
+                            if(match.getInstant() == null) {
+                                continue;
+                            }
+
                             DateTime startDate = new DateTime(Date.from(match.getInstant()));
                             startDate.setUtc(true);
                             DateTime endDate = new DateTime(Date.from(match.getInstant().plus(Duration.ofHours(1))));

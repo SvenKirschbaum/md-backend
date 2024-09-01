@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import javax.annotation.Nullable;
 import java.time.Instant;
 
 @Data
@@ -19,6 +20,7 @@ public class WorldsScheduleResponse {
     public static class WorldsScheduleMatch {
         @JsonProperty("DateTime UTC")
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
+        @Nullable
         private Instant instant;
         @JsonProperty("Team1")
         private String team1;
