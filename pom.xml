@@ -142,10 +142,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.target>25</maven.compiler.target>
-        <maven.compiler.source>25</maven.compiler.source>
-        <!-- Overwrite log4j version to mitigate zeroday -->
-        <log4j2.version>2.15.0</log4j2.version>
+        <java.version>25</java.version>
     </properties>
 
 </project>

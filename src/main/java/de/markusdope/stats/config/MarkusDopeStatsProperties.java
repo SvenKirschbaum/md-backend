@@ -24,4 +24,13 @@ public class MarkusDopeStatsProperties {
      * The currently active Season
      */
     private Integer currentSeason;
+
+    /**
+     * Username for lol.fandom.com
+     */
+    private String lolFandomUsername;
+    /**
+     * Password for lol.fandom.com
+     */
+    private String lolFandomPassword;
 }
