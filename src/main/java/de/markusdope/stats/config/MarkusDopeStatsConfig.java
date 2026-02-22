@@ -1,11 +1,10 @@
 package de.markusdope.stats.config;
 
-import com.github.cloudyrock.spring.v5.EnableMongock;
+import io.mongock.runner.springboot.EnableMongock;
 import de.markusdope.stats.util.CustomJwtAuthenticationConverter;
 import de.markusdope.stats.util.JodaDateTimeConverter;
 import de.markusdope.stats.util.JodaDurationConverter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -35,15 +34,14 @@ public class MarkusDopeStatsConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-                .csrf().disable()
-                .cors().and()
-                .oauth2ResourceServer().jwt().jwtAuthenticationConverter(jwtAuthenticationConverter).and().and()
-                .headers().disable()
-                .authorizeExchange()
-                .matchers(EndpointRequest.toAnyEndpoint())
-                .hasRole("actuator")
-                .anyExchange().permitAll()
-                .and()
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .cors(cors -> {
+                })
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
+                .headers(ServerHttpSecurity.HeaderSpec::disable)
+                .authorizeExchange(exchange -> exchange
+                        .pathMatchers("/manage/**").hasRole("actuator")
+                        .anyExchange().permitAll())
                 .build();
     }
 

@@ -10,6 +10,8 @@ import de.markusdope.stats.data.dto.PlayerMatchDTO;
 import de.markusdope.stats.data.repository.MatchPlayerRepository;
 import de.markusdope.stats.data.repository.MatchRepository;
 import de.markusdope.stats.exception.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/match")
 public class MatchController {
+    private static final Logger LOG = LoggerFactory.getLogger(MatchController.class);
+
     @Autowired
     private MatchRepository matchRepository;
 
@@ -83,6 +87,10 @@ public class MatchController {
                                         if (c.getParticipantId() == participantId) p = c;
                                     }
 
+                                    if (p == null) {
+                                        throw new NotFoundException();
+                                    }
+
                                     if (p.getTeam() == match.getBlueTeam().getTeamId()) {
                                         playerMatchDTO.setWin(match.getBlueTeam().isWinner());
                                     } else {
@@ -91,7 +99,7 @@ public class MatchController {
 
                                     playerMatchDTO.setPlayer(p);
 
-                                    playerMatchDTO.setChampion(Orianna.championWithId(p.getChampionId()).get().getName());
+                                    playerMatchDTO.setChampion(resolveChampionName(p.getChampionId()));
                                     playerMatchDTO.setMatchCreationTime(match.getCreationTime().toInstant());
                                     playerMatchDTO.setMatchDuration(match.getDuration());
                                     playerMatchDTO.setVersion(match.getVersion());
@@ -101,5 +109,14 @@ public class MatchController {
                                 })
                 )
                 .sort((o1, o2) -> (int) -(o1.getMatchId() - o2.getMatchId()));
+    }
+
+    private String resolveChampionName(int championId) {
+        try {
+            return Orianna.championWithId(championId).get().getName();
+        } catch (RuntimeException ex) {
+            LOG.warn("Failed to resolve champion name for id {}. Falling back to id.", championId, ex);
+            return String.valueOf(championId);
+        }
     }
 }
