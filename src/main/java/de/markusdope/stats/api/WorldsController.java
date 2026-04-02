@@ -31,7 +31,7 @@ public class WorldsController {
     private MarkusDopeStatsProperties properties;
 
     private static final String BASE_API_URL = "https://lol.fandom.com/api.php";
-    private static final String TOKEN_SESSION_COOKIE_NAME = "fandom__session";
+    private static final String TOKEN_SESSION_COOKIE_NAME = "fandom_wiki_session";
     private static final String AUTH_SESSION_COOKIE_NAME = "fandom__BPsession";
 
     private final WebClient webClient = WebClient.create();
