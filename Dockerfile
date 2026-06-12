@@ -1,4 +1,4 @@
-FROM maven:3.9.16-amazoncorretto-25@sha256:d07e29323836507efd1c05eaae5114101386abd48c768d5b3ea34389f4555eb8 as build
+FROM maven:3.9.16-amazoncorretto-25@sha256:8f1387c7eef62aed06070a80971bd0c17e3f3b90ce531294110ad25068b6ae6f as build
 
 WORKDIR /build
 
@@ -7,7 +7,7 @@ COPY src src
 
 RUN mvn package
 
-FROM amazoncorretto:25.0.3-alpine@sha256:80667e38af71ac103a3ae36a0b531d54c73c4da28fc02b57f69bce8993c0e1b0
+FROM amazoncorretto:25.0.3-alpine@sha256:d0915ce12f1c011cc332c32ea21ec8ad85ef47b03e46f1a4bfa8c5cd602468a4
 
 WORKDIR /usr/locale/markusdope-backend
 
