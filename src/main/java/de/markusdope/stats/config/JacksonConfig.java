@@ -1,14 +1,14 @@
 package de.markusdope.stats.config;
 
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.JacksonModule;
+import tools.jackson.datatype.joda.JodaModule;
 
 @Configuration
 public class JacksonConfig {
     @Bean
-    public Module jodaModule() {
+    public JacksonModule jodaModule() {
         return new JodaModule();
     }
 }
