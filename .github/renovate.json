@@ -1,5 +1,16 @@
 {
   "extends": [
     "github>fallobst22/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "description": "Keep Orianna-compatible Jackson 2 runtime artifacts pinned",
+      "matchDatasources": ["maven"],
+      "matchPackageNames": [
+        "com.fasterxml.jackson.core:jackson-core",
+        "com.fasterxml.jackson.core:jackson-databind"
+      ],
+      "enabled": false
+    }
   ]
 }
