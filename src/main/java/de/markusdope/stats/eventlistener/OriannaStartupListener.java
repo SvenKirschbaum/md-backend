@@ -1,6 +1,5 @@
 package de.markusdope.stats.eventlistener;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.merakianalytics.orianna.Orianna;
 import com.merakianalytics.orianna.types.common.Platform;
 import com.merakianalytics.orianna.types.common.Region;
@@ -15,9 +14,6 @@ public class OriannaStartupListener implements ApplicationListener<ApplicationSt
 
     @Autowired
     private MarkusDopeStatsProperties properties;
-
-    @Autowired
-    private ObjectMapper mapper;
 
     @Override
     public void onApplicationEvent(ApplicationStartedEvent event) {
