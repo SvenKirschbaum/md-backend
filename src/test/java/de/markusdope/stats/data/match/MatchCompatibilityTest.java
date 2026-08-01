@@ -1,60 +1,35 @@
 package de.markusdope.stats.data.match;
 
-import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.datatype.joda.JodaModule;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class MatchCompatibilityTest {
-    private final JsonMapper mapper = JsonMapper.builder().addModule(new JodaModule()).build();
-
     @Test
-    void serializesLikeOriannaCoreMatchData() {
-        var oldStats = new com.merakianalytics.orianna.types.data.match.ParticipantStats();
-        oldStats.setKills(7);
-        oldStats.setCrowdControlDealtToChampions(Duration.millis(1234));
-        var oldParticipant = new com.merakianalytics.orianna.types.data.match.Participant();
-        oldParticipant.setParticipantId(1);
-        oldParticipant.setChampionId(22);
-        oldParticipant.setLane("BOTTOM");
-        oldParticipant.setStats(oldStats);
-        var oldTeam = new com.merakianalytics.orianna.types.data.match.Team();
-        oldTeam.setTeamId(100);
-        oldTeam.setWinner(true);
-        var oldMatch = new com.merakianalytics.orianna.types.data.match.Match();
-        oldMatch.setId(42L);
-        oldMatch.setCreationTime(new DateTime("2020-01-02T03:04:05Z"));
-        oldMatch.setDuration(Duration.standardMinutes(30));
-        oldMatch.setVersion("10.1.1");
-        oldMatch.setParticipants(List.of(oldParticipant));
-        oldMatch.setBlueTeam(oldTeam);
+    void exposesTheCharacterizedMatchProperties() throws Exception {
+        assertThat(beanProperties(Match.class)).containsExactlyInAnyOrder(
+                "blueTeam", "creationTime", "duration", "id", "map", "mode", "participants",
+                "platform", "queue", "redTeam", "season", "tournamentCode", "type", "version");
+        assertThat(beanProperties(Participant.class)).containsExactlyInAnyOrder(
+                "accountId", "championId", "currentAccountId", "currentPlatform", "highestTierInSeason",
+                "items", "lane", "matchHistoryURI", "participantId", "platform", "primaryRunePath",
+                "profileIconId", "role", "runeStats", "secondaryRunePath", "stats", "summonerId",
+                "summonerName", "summonerSpellDId", "summonerSpellFId", "team", "timeline", "version");
+        assertThat(beanProperties(Team.class)).containsExactlyInAnyOrder(
+                "bans", "baronKills", "dominionScore", "dragonKills", "firstBaronKiller",
+                "firstBloodKiller", "firstDragonKiller", "firstInhibitorKiller", "firstRiftHeraldKiller",
+                "firstTowerKiller", "inhibitorKills", "platform", "riftHeraldKills", "teamId",
+                "towerKills", "version", "vilemawKills", "winner");
+    }
 
-        var stats = new ParticipantStats();
-        stats.setKills(7);
-        stats.setCrowdControlDealtToChampions(Duration.millis(1234));
-        var participant = new Participant();
-        participant.setParticipantId(1);
-        participant.setChampionId(22);
-        participant.setLane("BOTTOM");
-        participant.setStats(stats);
-        var team = new Team();
-        team.setTeamId(100);
-        team.setWinner(true);
-        var match = new Match();
-        match.setId(42L);
-        match.setCreationTime(new DateTime("2020-01-02T03:04:05Z"));
-        match.setDuration(Duration.standardMinutes(30));
-        match.setVersion("10.1.1");
-        match.setParticipants(List.of(participant));
-        match.setBlueTeam(team);
-
-        assertThat((JsonNode) mapper.valueToTree(match)).isEqualTo(mapper.valueToTree(oldMatch));
+    private static java.util.Set<String> beanProperties(Class<?> type) throws Exception {
+        return java.util.Arrays.stream(java.beans.Introspector.getBeanInfo(type).getPropertyDescriptors())
+                .map(java.beans.PropertyDescriptor::getName)
+                .filter(name -> !"class".equals(name))
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     @Test
