@@ -1,15 +1,16 @@
 package de.markusdope.stats.api;
 
-import com.merakianalytics.orianna.Orianna;
-import com.merakianalytics.orianna.types.data.match.Match;
-import com.merakianalytics.orianna.types.data.match.Participant;
 import de.markusdope.stats.config.MarkusDopeStatsProperties;
 import de.markusdope.stats.data.document.MatchPlayer;
 import de.markusdope.stats.data.dto.MatchDTO;
 import de.markusdope.stats.data.dto.PlayerMatchDTO;
+import de.markusdope.stats.data.match.Match;
+import de.markusdope.stats.data.match.Participant;
 import de.markusdope.stats.data.repository.MatchPlayerRepository;
 import de.markusdope.stats.data.repository.MatchRepository;
 import de.markusdope.stats.exception.NotFoundException;
+import de.markusdope.stats.exception.ReadOnlyException;
+import de.markusdope.stats.service.DataDragonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,9 @@ public class MatchController {
     @Autowired
     private MarkusDopeStatsProperties properties;
 
+    @Autowired
+    private DataDragonService dataDragonService;
+
     @GetMapping("/{id}")
     public Mono<MatchDTO> getMatchAction(@PathVariable Long id) {
         return matchPlayerRepository
@@ -53,9 +57,7 @@ public class MatchController {
     @PreAuthorize("hasRole('manager')")
     @DeleteMapping("/{id}")
     public Mono<Void> deleteMatchAction(@PathVariable Long id) {
-        return matchPlayerRepository
-                .deleteById(id)
-                .and(matchRepository.deleteById(id));
+        return Mono.error(new ReadOnlyException());
     }
 
     @GetMapping(value = {"/player/{name}/", "/player/{name}/{season}"})
@@ -71,17 +73,17 @@ public class MatchController {
                                     //Handle season = 0 as all season combined
                                     return searchedSeason == 0 || matchDocument.getSeason().equals(searchedSeason);
                                 })
-                                .map(matchDocument -> {
+                                .flatMap(matchDocument -> {
                                     Match match = matchDocument.getMatch();
                                     Integer participantId = matchPlayer.getParticipant(name);
 
                                     PlayerMatchDTO playerMatchDTO = new PlayerMatchDTO();
                                     playerMatchDTO.setMatchId(match.getId());
 
-                                    Participant p = null;
-                                    for (Participant c : match.getParticipants()) {
-                                        if (c.getParticipantId() == participantId) p = c;
-                                    }
+                                    Participant p = match.getParticipants().stream()
+                                            .filter(candidate -> candidate.getParticipantId() == participantId)
+                                            .findFirst()
+                                            .orElse(null);
 
                                     if (p.getTeam() == match.getBlueTeam().getTeamId()) {
                                         playerMatchDTO.setWin(match.getBlueTeam().isWinner());
@@ -91,13 +93,15 @@ public class MatchController {
 
                                     playerMatchDTO.setPlayer(p);
 
-                                    playerMatchDTO.setChampion(Orianna.championWithId(p.getChampionId()).get().getName());
                                     playerMatchDTO.setMatchCreationTime(match.getCreationTime().toInstant());
                                     playerMatchDTO.setMatchDuration(match.getDuration());
                                     playerMatchDTO.setVersion(match.getVersion());
 
-
-                                    return playerMatchDTO;
+                                    return dataDragonService.championName(p.getChampionId(), match.getVersion())
+                                            .map(champion -> {
+                                                playerMatchDTO.setChampion(champion);
+                                                return playerMatchDTO;
+                                            });
                                 })
                 )
                 .sort((o1, o2) -> (int) -(o1.getMatchId() - o2.getMatchId()));

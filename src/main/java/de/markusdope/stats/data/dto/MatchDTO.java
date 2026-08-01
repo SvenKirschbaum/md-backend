@@ -1,6 +1,6 @@
 package de.markusdope.stats.data.dto;
 
-import com.merakianalytics.orianna.types.data.match.Match;
+import de.markusdope.stats.data.match.Match;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

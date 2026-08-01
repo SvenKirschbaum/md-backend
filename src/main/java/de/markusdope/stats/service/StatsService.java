@@ -3,6 +3,8 @@ package de.markusdope.stats.service;
 import de.markusdope.stats.data.document.MatchDocument;
 import de.markusdope.stats.data.dto.LolRecordsDTO;
 import de.markusdope.stats.data.dto.PlayerStats;
+import de.markusdope.stats.data.match.Match;
+import de.markusdope.stats.data.match.Participant;
 import de.markusdope.stats.data.repository.MatchPlayerRepository;
 import de.markusdope.stats.data.repository.MatchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,9 @@ public class StatsService {
 
     @Autowired
     private MatchRepository matchRepository;
+
+    @Autowired
+    private DataDragonService dataDragonService;
 
     public Flux<PlayerStats> getPlayerStats(Integer season) {
         return
@@ -67,7 +72,14 @@ public class StatsService {
                 )
                 .parallel()
                 .runOn(Schedulers.parallel())
-                .map(matchTuple -> LolRecordsDTO.ofMatchDocument(matchTuple.getT1(), matchTuple.getT2()))
+                .flatMap(matchTuple -> {
+                    Match match = matchTuple.getT1().getMatch();
+                    var championIds = match.getParticipants().stream()
+                            .map(Participant::getChampionId)
+                            .collect(Collectors.toSet());
+                    return dataDragonService.championNames(championIds, match.getVersion())
+                            .map(names -> LolRecordsDTO.ofMatchDocument(matchTuple.getT1(), matchTuple.getT2(), names));
+                })
                 .reduce(LolRecordsDTO::combine)
                 .switchIfEmpty(Mono.defer(() -> {
                     LolRecordsDTO lolRecordsDTO = new LolRecordsDTO();

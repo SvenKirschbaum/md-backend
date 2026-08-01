@@ -1,6 +1,6 @@
 package de.markusdope.stats.data.dto;
 
-import com.merakianalytics.orianna.types.data.match.Participant;
+import de.markusdope.stats.data.match.Participant;
 import lombok.Data;
 import org.joda.time.Duration;
 import org.joda.time.Instant;

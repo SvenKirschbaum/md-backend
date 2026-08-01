@@ -16,11 +16,6 @@ public class MarkusDopeStatsProperties {
     private String oauthResourceId;
 
     /**
-     * API Key for Riot APIs
-     */
-    private String riotApiKey;
-
-    /**
      * The currently active Season
      */
     private Integer currentSeason;
