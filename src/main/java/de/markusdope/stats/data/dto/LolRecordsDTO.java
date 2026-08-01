@@ -53,7 +53,12 @@ public class LolRecordsDTO {
         records.put("multiKill", LolRecordsDTO.createPlayerRecord(participant -> participant.getStats().getLargestMultiKill(), match, matchPlayer, championNames, false));
 
 
-        Optional<Event> first_champion_kill_opt = matchDocument.getTimeline().stream().flatMap(Collection::stream).filter(event -> event.getType().equals("CHAMPION_KILL")).min(Comparator.comparing(Event::getTimestamp));
+        Optional<Event> first_champion_kill_opt = Optional.ofNullable(matchDocument.getTimeline())
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .flatMap(Collection::stream)
+                .filter(event -> event.getType().equals("CHAMPION_KILL"))
+                .min(Comparator.comparing(Event::getTimestamp));
 
         if (first_champion_kill_opt.isPresent()) {
             Event first_champion_kill = first_champion_kill_opt.get();
@@ -100,15 +105,15 @@ public class LolRecordsDTO {
 
         e1.getRecords().forEach(
                 (key, lolRecord) -> {
-                    records.put(key, LolRecordsDTO.getMaxSet(lolRecord, e2.getRecords().get(key)));
-                    e2.getRecords().remove(key);
+                    Set<LolRecord> otherRecord = e2.getRecords().get(key);
+                    records.put(key, otherRecord == null
+                            ? new HashSet<>(lolRecord)
+                            : LolRecordsDTO.getMaxSet(lolRecord, otherRecord));
                 }
         );
         //In case e2 contains record entries which e1 doesnt contain
         e2.getRecords().forEach(
-                (key, lolRecord) -> {
-                    records.put(key, LolRecordsDTO.getMaxSet(lolRecord, e1.getRecords().get(key)));
-                }
+                (key, lolRecord) -> records.putIfAbsent(key, new HashSet<>(lolRecord))
         );
 
         lolRecordsDTO.setRecords(records);

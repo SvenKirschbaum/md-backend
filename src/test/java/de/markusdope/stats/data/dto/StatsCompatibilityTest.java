@@ -37,6 +37,38 @@ class StatsCompatibilityTest {
     }
 
     @Test
+    void treatsMissingLegacyTimelineAsNoEvents() {
+        Fixture fixture = fixture();
+        fixture.document().setTimeline(null);
+
+        var records = records(fixture);
+
+        assertThat(records.getRecords()).containsKey("kills");
+        assertThat(records.getRecords()).doesNotContainKeys("earlyKill", "earlyDeath");
+    }
+
+    @Test
+    void combinesRecordsWhenOnlyOneMatchHasFirstKillEvents() {
+        Fixture fixture = fixture();
+        var withFirstKill = records(fixture);
+        fixture.document().setTimeline(List.of());
+        var withoutFirstKill = records(fixture);
+
+        var combined = LolRecordsDTO.combine(withFirstKill, withoutFirstKill);
+
+        assertThat(combined.getRecords()).containsKeys("kills", "earlyKill", "earlyDeath");
+
+        fixture.document().setTimeline(List.of());
+        withoutFirstKill = records(fixture);
+        fixture.document().setTimeline(List.of(List.of(firstKill())));
+        withFirstKill = records(fixture);
+
+        var reverseCombined = LolRecordsDTO.combine(withoutFirstKill, withFirstKill);
+
+        assertThat(reverseCombined.getRecords()).containsKeys("kills", "earlyKill", "earlyDeath");
+    }
+
+    @Test
     void readsLegacyRootDocumentAndTimelineWithoutMigration() throws Exception {
         var context = new org.springframework.data.mongodb.core.mapping.MongoMappingContext();
         context.afterPropertiesSet();
@@ -100,22 +132,31 @@ class StatsCompatibilityTest {
         match.setRedTeam(red);
         match.setParticipants(List.of(ashe, garen));
 
-        Event firstKill = new Event();
-        firstKill.setType("CHAMPION_KILL");
-        firstKill.setKillerId(1);
-        firstKill.setVictimId(2);
-        firstKill.setTimestamp(Duration.standardMinutes(2));
         MatchDocument document = new MatchDocument();
         document.setId(42L);
         document.setSeason(1);
         document.setMatch(match);
-        document.setTimeline(List.of(List.of(firstKill)));
+        document.setTimeline(List.of(List.of(firstKill())));
 
         MatchPlayer players = new MatchPlayer();
         players.setId(42L);
         players.setPlayers(new MatchPlayer.Player[]{
                 new MatchPlayer.Player(1, "Alice"), new MatchPlayer.Player(2, "Bob")});
         return new Fixture(match, ashe, blue, document, players);
+    }
+
+    private static LolRecordsDTO records(Fixture fixture) {
+        return LolRecordsDTO.ofMatchDocument(
+                fixture.document(), fixture.players(), Map.of(22, "Ashe", 86, "Garen"));
+    }
+
+    private static Event firstKill() {
+        Event firstKill = new Event();
+        firstKill.setType("CHAMPION_KILL");
+        firstKill.setKillerId(1);
+        firstKill.setVictimId(2);
+        firstKill.setTimestamp(Duration.standardMinutes(2));
+        return firstKill;
     }
 
     private record Fixture(Match match, Participant ashe, Team blueTeam,
