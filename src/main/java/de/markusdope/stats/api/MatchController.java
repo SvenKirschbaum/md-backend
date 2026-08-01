@@ -9,6 +9,7 @@ import de.markusdope.stats.data.match.Participant;
 import de.markusdope.stats.data.repository.MatchPlayerRepository;
 import de.markusdope.stats.data.repository.MatchRepository;
 import de.markusdope.stats.exception.NotFoundException;
+import de.markusdope.stats.exception.ReadOnlyException;
 import de.markusdope.stats.service.DataDragonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,9 +57,7 @@ public class MatchController {
     @PreAuthorize("hasRole('manager')")
     @DeleteMapping("/{id}")
     public Mono<Void> deleteMatchAction(@PathVariable Long id) {
-        return matchPlayerRepository
-                .deleteById(id)
-                .and(matchRepository.deleteById(id));
+        return Mono.error(new ReadOnlyException());
     }
 
     @GetMapping(value = {"/player/{name}/", "/player/{name}/{season}"})
