@@ -43,7 +43,7 @@ class MatchCompatibilityTest {
                 new de.markusdope.stats.util.JodaDurationConverter())));
         converter.afterPropertiesSet();
 
-        var source = new org.bson.Document("id", 42L)
+        var source = new org.bson.Document("_id", 42L)
                 .append("creationTime", java.util.Date.from(java.time.Instant.parse("2020-01-02T03:04:05Z")))
                 .append("duration", new org.bson.Document("iMillis", 1_800_000L))
                 .append("participants", List.of(new org.bson.Document("participantId", 1)
@@ -60,5 +60,21 @@ class MatchCompatibilityTest {
         assertThat(match.getParticipants().getFirst().getStats().getCrowdControlDealtToChampions())
                 .isEqualTo(Duration.millis(1234));
         assertThat(match.getBlueTeam().isWinner()).isTrue();
+    }
+
+    @Test
+    void writesMatchIdUsingMongoIdConvention() throws Exception {
+        var context = new org.springframework.data.mongodb.core.mapping.MongoMappingContext();
+        context.afterPropertiesSet();
+        var converter = new org.springframework.data.mongodb.core.convert.MappingMongoConverter(
+                org.springframework.data.mongodb.core.convert.NoOpDbRefResolver.INSTANCE, context);
+        converter.afterPropertiesSet();
+        var match = new Match();
+        match.setId(42L);
+        var target = new org.bson.Document();
+
+        converter.write(match, target);
+
+        assertThat(target).containsEntry("_id", 42L).doesNotContainKey("id");
     }
 }

@@ -84,12 +84,13 @@ class StatsCompatibilityTest {
                 .append("timestamp", new org.bson.Document("iMillis", 120_000L));
         var source = new org.bson.Document("_class", MatchDocument.class.getName())
                 .append("_id", 42L).append("season", 1)
-                .append("match", new org.bson.Document("id", 42L).append("version", "10.1.1"))
+                .append("match", new org.bson.Document("_id", 43L).append("version", "10.1.1"))
                 .append("timeline", List.of(List.of(event)));
 
         MatchDocument document = converter.read(MatchDocument.class, source);
 
         assertThat(document.getId()).isEqualTo(42L);
+        assertThat(document.getMatch().getId()).isEqualTo(43L);
         assertThat(document.getTimeline().getFirst().getFirst().getType()).isEqualTo("CHAMPION_KILL");
         assertThat(document.getTimeline().getFirst().getFirst().getTimestamp())
                 .isEqualTo(Duration.standardMinutes(2));

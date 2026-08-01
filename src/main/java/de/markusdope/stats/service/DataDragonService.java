@@ -5,12 +5,14 @@ import de.markusdope.stats.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,10 @@ import java.util.stream.Collectors;
 @Service
 public class DataDragonService {
     private static final String BASE_URL = "https://ddragon.leagueoflegends.com";
+    private static final byte[] PNG_SIGNATURE = {
+            (byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
+    };
+    static final Duration VERSION_LIST_CACHE_TTL = Duration.ofHours(1);
 
     private final WebClient webClient;
     private final Mono<List<String>> versions;
@@ -33,9 +39,13 @@ public class DataDragonService {
     }
 
     DataDragonService(WebClient webClient) {
+        this(webClient, VERSION_LIST_CACHE_TTL);
+    }
+
+    DataDragonService(WebClient webClient, Duration versionListCacheTtl) {
         this.webClient = webClient;
         this.versions = get("/api/versions.json", new ParameterizedTypeReference<List<String>>() {
-        }).cache();
+        }).cache(value -> versionListCacheTtl, error -> Duration.ZERO, () -> Duration.ZERO);
     }
 
     public Mono<String> resolveVersion(String requested) {
@@ -88,12 +98,14 @@ public class DataDragonService {
 
     private Mono<Catalog> championCatalog(String version) {
         return champions.computeIfAbsent(version,
-                key -> get("/cdn/" + key + "/data/de_DE/champion.json", Catalog.class).cache());
+                key -> get("/cdn/" + key + "/data/de_DE/champion.json", Catalog.class)
+                        .cache(value -> Duration.ofMillis(Long.MAX_VALUE), error -> Duration.ZERO, () -> Duration.ZERO));
     }
 
     private Mono<Catalog> spellCatalog(String version) {
         return spells.computeIfAbsent(version,
-                key -> get("/cdn/" + key + "/data/de_DE/summoner.json", Catalog.class).cache());
+                key -> get("/cdn/" + key + "/data/de_DE/summoner.json", Catalog.class)
+                        .cache(value -> Duration.ofMillis(Long.MAX_VALUE), error -> Duration.ZERO, () -> Duration.ZERO));
     }
 
     private Entry find(Catalog catalog, int id) {
@@ -112,7 +124,18 @@ public class DataDragonService {
     }
 
     private Mono<byte[]> getBytes(String path) {
-        return exchange(path, response -> response.bodyToMono(byte[].class));
+        return exchange(path, response -> {
+            if (response.headers().contentType()
+                    .filter(MediaType.IMAGE_PNG::isCompatibleWith)
+                    .isEmpty()) {
+                return Mono.error(new BadGatewayException());
+            }
+            return response.bodyToMono(byte[].class)
+                    .filter(bytes -> bytes.length >= PNG_SIGNATURE.length
+                            && Arrays.equals(bytes, 0, PNG_SIGNATURE.length,
+                            PNG_SIGNATURE, 0, PNG_SIGNATURE.length))
+                    .switchIfEmpty(Mono.error(new BadGatewayException()));
+        });
     }
 
     private <T> Mono<T> exchange(String path, Function<ClientResponse, Mono<T>> body) {

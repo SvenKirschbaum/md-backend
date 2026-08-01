@@ -1,6 +1,5 @@
 package de.markusdope.stats.api;
 
-import de.markusdope.stats.data.dto.ImportRequestDTO;
 import de.markusdope.stats.exception.ReadOnlyException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +15,7 @@ public class ImportController {
     }
 
     @PostMapping("/{matchId}")
-    public Mono<Void> postAction(@PathVariable Long matchId, @RequestBody ImportRequestDTO request) {
+    public Mono<Void> postAction(@PathVariable Long matchId) {
         return Mono.error(new ReadOnlyException());
     }
 }

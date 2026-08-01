@@ -72,7 +72,54 @@ class ReadOnlyApiTest {
     }
 
     @Test
-    void rejectsImportWithoutCallingDataSources() {
+    void rejectsImportWithNoBodyWithoutCallingDataSources() {
+        assertReadOnly(webTestClient.post().uri("/import/42").exchange());
+
+        verifyDataSourcesWereNotCalled();
+    }
+
+    @Test
+    void rejectsImportWithEmptyJsonBodyWithoutCallingDataSources() {
+        assertReadOnly(webTestClient.post().uri("/import/42")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("")
+                .exchange());
+
+        verifyDataSourcesWereNotCalled();
+    }
+
+    @Test
+    void rejectsImportWithEmptyJsonObjectWithoutCallingDataSources() {
+        assertReadOnly(webTestClient.post().uri("/import/42")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{}")
+                .exchange());
+
+        verifyDataSourcesWereNotCalled();
+    }
+
+    @Test
+    void rejectsImportWithMalformedJsonWithoutCallingDataSources() {
+        assertReadOnly(webTestClient.post().uri("/import/42")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{")
+                .exchange());
+
+        verifyDataSourcesWereNotCalled();
+    }
+
+    @Test
+    void rejectsImportWithUnsupportedContentTypeWithoutCallingDataSources() {
+        assertReadOnly(webTestClient.post().uri("/import/42")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue("not json")
+                .exchange());
+
+        verifyDataSourcesWereNotCalled();
+    }
+
+    @Test
+    void rejectsImportWithValidJsonWithoutCallingDataSources() {
         assertReadOnly(webTestClient.post().uri("/import/42")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"playerMapping\":{\"1\":\"Alice\"}}")
@@ -92,11 +139,12 @@ class ReadOnlyApiTest {
         response.expectStatus().isEqualTo(HttpStatus.GONE)
                 .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .expectBody()
+                .jsonPath("$.status").isEqualTo(410)
                 .jsonPath("$.detail").isEqualTo(READ_ONLY_REASON);
     }
 
     private void verifyDataSourcesWereNotCalled() {
-        verifyNoInteractions(matchRepository, matchPlayerRepository, dataDragonService);
+        verifyNoInteractions(matchRepository, matchPlayerRepository, playerService, properties, dataDragonService);
     }
 
     @Configuration(proxyBeanMethods = false)

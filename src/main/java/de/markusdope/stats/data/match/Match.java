@@ -3,7 +3,6 @@ package de.markusdope.stats.data.match;
 import lombok.Data;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.List;
 
@@ -13,7 +12,6 @@ public class Match {
     private Team redTeam;
     private DateTime creationTime;
     private Duration duration;
-    @Field("id")
     private long id;
     private int map;
     private int queue;
