@@ -3,7 +3,7 @@ package de.markusdope.stats.api;
 import de.markusdope.stats.config.MarkusDopeStatsProperties;
 import de.markusdope.stats.data.repository.MatchPlayerRepository;
 import de.markusdope.stats.data.repository.MatchRepository;
-import de.markusdope.stats.exception.ReadOnlyException;
+import de.markusdope.stats.exception.ReadOnlyExceptionHandler;
 import de.markusdope.stats.service.DataDragonService;
 import de.markusdope.stats.service.PlayerService;
 import org.junit.jupiter.api.AfterEach;
@@ -17,10 +17,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,6 +53,7 @@ class ReadOnlyApiTest {
         context.getBeanFactory().registerSingleton("dataDragonService", dataDragonService);
         context.registerBean(ImportController.class, () -> importController);
         context.registerBean(MatchController.class, () -> matchController);
+        context.registerBean(ReadOnlyExceptionHandler.class);
         context.refresh();
 
         webTestClient = WebTestClient.bindToApplicationContext(context).build();
@@ -91,10 +90,9 @@ class ReadOnlyApiTest {
 
     private void assertReadOnly(WebTestClient.ResponseSpec response) {
         response.expectStatus().isEqualTo(HttpStatus.GONE)
-                .expectBody().isEmpty();
-
-        ResponseStatus responseStatus = ReadOnlyException.class.getAnnotation(ResponseStatus.class);
-        assertEquals(READ_ONLY_REASON, responseStatus.reason());
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.detail").isEqualTo(READ_ONLY_REASON);
     }
 
     private void verifyDataSourcesWereNotCalled() {
