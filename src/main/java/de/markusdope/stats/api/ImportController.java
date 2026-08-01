@@ -3,13 +3,14 @@ package de.markusdope.stats.api;
 import com.merakianalytics.orianna.Orianna;
 import com.merakianalytics.orianna.types.common.GameType;
 import com.merakianalytics.orianna.types.core.OriannaObject;
-import com.merakianalytics.orianna.types.data.match.Frame;
-import com.merakianalytics.orianna.types.data.match.Participant;
 import de.markusdope.stats.config.MarkusDopeStatsProperties;
 import de.markusdope.stats.data.document.MatchDocument;
 import de.markusdope.stats.data.document.MatchPlayer;
 import de.markusdope.stats.data.dto.ImportRequestDTO;
 import de.markusdope.stats.data.dto.ImportResponseDTO;
+import de.markusdope.stats.data.match.Event;
+import de.markusdope.stats.data.match.Match;
+import de.markusdope.stats.data.match.Participant;
 import de.markusdope.stats.data.repository.MatchPlayerRepository;
 import de.markusdope.stats.data.repository.MatchRepository;
 import de.markusdope.stats.exception.UnprocessableEntityException;
@@ -25,8 +26,12 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.datatype.joda.JodaModule;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -37,6 +42,7 @@ import java.util.stream.Collectors;
 public class ImportController {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportController.class);
+    private static final JsonMapper MAPPER = JsonMapper.builder().addModule(new JodaModule()).build();
     @Autowired
     private MatchRepository matchRepository;
     @Autowired
@@ -104,8 +110,11 @@ public class ImportController {
                                 MatchDocument matchDocument = new MatchDocument();
                                 matchDocument.setId(match.getId());
                                 matchDocument.setSeason(properties.getCurrentSeason());
-                                matchDocument.setMatch(match.getCoreData());
-                                matchDocument.setTimeline(match.getTimeline().stream().map(OriannaObject::getCoreData).toArray(Frame[]::new));
+                                matchDocument.setMatch(MAPPER.convertValue(match.getCoreData(), Match.class));
+                                matchDocument.setTimeline(match.getTimeline().stream()
+                                        .map(OriannaObject::getCoreData)
+                                        .map(frame -> MAPPER.convertValue(frame, new TypeReference<List<Event>>() {}))
+                                        .toList());
                                 return matchDocument;
                             })
                             .flatMap(matchDocument -> matchRepository.save(matchDocument))

@@ -1,8 +1,8 @@
 package de.markusdope.stats.data.dto;
 
-import com.merakianalytics.orianna.types.data.match.Match;
-import com.merakianalytics.orianna.types.data.match.Participant;
-import com.merakianalytics.orianna.types.data.match.Team;
+import de.markusdope.stats.data.match.Match;
+import de.markusdope.stats.data.match.Participant;
+import de.markusdope.stats.data.match.Team;
 import lombok.Data;
 import reactor.util.function.Tuple3;
 
