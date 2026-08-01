@@ -119,8 +119,8 @@ public class DataDragonService {
         return webClient.get().uri(path).exchangeToMono(response -> {
             HttpStatusCode status = response.statusCode();
             if (status.value() == 404) return Mono.error(new NotFoundException());
-            if (status.isError()) return Mono.error(new BadGatewayException());
-            return body.apply(response);
+            if (!status.is2xxSuccessful()) return Mono.error(new BadGatewayException());
+            return body.apply(response).switchIfEmpty(Mono.error(new BadGatewayException()));
         }).timeout(Duration.ofSeconds(10)).transform(this::mapFailures);
     }
 

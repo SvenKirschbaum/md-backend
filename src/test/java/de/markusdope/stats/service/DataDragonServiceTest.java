@@ -1,5 +1,6 @@
 package de.markusdope.stats.service;
 
+import de.markusdope.stats.exception.BadGatewayException;
 import de.markusdope.stats.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -113,6 +114,44 @@ class DataDragonServiceTest {
 
         StepVerifier.create(service.championName(22, "10.1"))
                 .expectError(de.markusdope.stats.exception.BadGatewayException.class).verify();
+    }
+
+    @Test
+    void mapsEmptyVersionResponseToBadGateway() {
+        var service = new DataDragonService(WebClient.builder().baseUrl("https://example.test")
+                .exchangeFunction(request -> Mono.just(ClientResponse.create(HttpStatus.OK).build()))
+                .build());
+
+        StepVerifier.create(service.resolveVersion("latest"))
+                .expectError(BadGatewayException.class)
+                .verify();
+    }
+
+    @Test
+    void mapsEmptyChampionCatalogResponseToBadGateway() {
+        var service = new DataDragonService(WebClient.builder().baseUrl("https://example.test")
+                .exchangeFunction(request -> request.url().getPath().equals("/api/versions.json")
+                        ? json("[\"10.1.1\"]")
+                        : Mono.just(ClientResponse.create(HttpStatus.OK).build()))
+                .build());
+
+        StepVerifier.create(service.championName(22, "10.1"))
+                .expectError(BadGatewayException.class)
+                .verify();
+    }
+
+    @Test
+    void mapsEmptyImageResponseToBadGateway() {
+        StepVerifier.create(serviceWithImageStatus(HttpStatus.OK).itemImage(1001, "10.1"))
+                .expectError(BadGatewayException.class)
+                .verify();
+    }
+
+    @Test
+    void mapsRedirectToBadGateway() {
+        StepVerifier.create(serviceWithImageStatus(HttpStatus.FOUND).itemImage(1001, "10.1"))
+                .expectError(BadGatewayException.class)
+                .verify();
     }
 
     private static Mono<ClientResponse> json(String body) {
