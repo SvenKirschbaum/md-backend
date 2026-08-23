@@ -79,7 +79,7 @@ public class WorldsController {
                                     .flatMap(loginCookie ->
                                         webClient
                                             .get()
-                                            .uri(BASE_API_URL + "?action=cargoquery&format=json&smaxage=0&tables=MatchSchedule&fields=DateTime_UTC,Team1,Team2&where=OverviewPage LIKE \"2025 Season World Championship/%\"&limit=max")
+                                            .uri(BASE_API_URL + "?action=cargoquery&format=json&smaxage=0&tables=MatchSchedule&fields=DateTime_UTC,Team1,Team2&where=OverviewPage LIKE \"2026 Season World Championship/%\"&limit=max")
                                             .cookie(AUTH_SESSION_COOKIE_NAME, loginCookie)
                                             .retrieve()
                                             .bodyToMono(WorldsScheduleResponse.class)
