@@ -1,4 +1,4 @@
-FROM maven:3.10.0-amazoncorretto-25@sha256:91d93bc90cf6f488553502ffe494a12136aca91babd8ba4caa10a4e306c0d901 as build
+FROM maven:3.10.0-amazoncorretto-25@sha256:cd70d2558213140e9352b3ef0badc40a09140e7e48f72e78a3760da5fe614665 as build
 
 WORKDIR /build
 
